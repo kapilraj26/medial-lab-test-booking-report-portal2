@@ -1,0 +1,58 @@
+Table users {
+  user_id integer [primary key]
+  name varchar
+  email varchar [unique]
+  phone varchar
+  password varchar
+  role varchar [note: 'Patient | LabStaff | Admin']
+  created_at timestamp
+}
+
+Table lab_tests {
+  test_id integer [primary key]
+  test_name varchar
+  description text
+  sample_type varchar
+  price decimal
+  created_at timestamp
+}
+
+Table bookings {
+  booking_id integer [primary key]
+  user_id integer [not null]
+  test_id integer [not null]
+  booking_date date
+  booking_time time
+  status varchar [note: 'Pending | Completed | Cancelled']
+  total_amount decimal
+  created_at timestamp
+}
+
+Table reports {
+  report_id integer [primary key]
+  booking_id integer [not null]
+  report_file varchar
+  report_date timestamp
+  remarks text
+  created_at timestamp
+}
+
+Table feedback {
+  feedback_id integer [primary key]
+  user_id integer [not null]
+  booking_id integer [not null]
+  rating integer
+  comments text
+  created_at timestamp
+}
+
+Ref booking_user: bookings.user_id > users.user_id
+
+Ref booking_test: bookings.test_id > lab_tests.test_id
+
+Ref report_booking: reports.booking_id > bookings.booking_id
+
+Ref feedback_user: feedback.user_id > users.user_id
+
+Ref feedback_booking: feedback.booking_id > bookings.booking_id
+
