@@ -11,7 +11,6 @@ function MyFeedback() {
   const getFeedback = async () => {
     try {
       const token = localStorage.getItem("access_token");
-      const userId = Number(localStorage.getItem("user_id"));
 
       const response = await axios.get(
         "http://127.0.0.1:8000/feedback/",
@@ -22,13 +21,21 @@ function MyFeedback() {
         }
       );
 
-      const myFeedback = response.data.filter(
-        (item) => item.user_id === userId
-      );
+      console.log("MY FEEDBACK RESPONSE:", response.data);
 
-      setFeedback(myFeedback);
+      // Backend already returns only the logged-in user's feedback
+      setFeedback(response.data);
+
     } catch (error) {
-      console.error(error);
+      console.error("Feedback error:", error);
+
+      if (error.response) {
+        console.log(
+          "Server response:",
+          error.response.data
+        );
+      }
+
       alert("Failed to load feedback");
     }
   };

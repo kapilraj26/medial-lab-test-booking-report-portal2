@@ -16,12 +16,14 @@ class Feedback(Base):
 
     user_id = Column(
         Integer,
-        ForeignKey("users.user_id")
+        ForeignKey("users.user_id"),
+        nullable=False
     )
 
     booking_id = Column(
         Integer,
-        ForeignKey("bookings.booking_id")
+        ForeignKey("bookings.booking_id"),
+        nullable=False
     )
 
     rating = Column(
@@ -34,3 +36,5 @@ class Feedback(Base):
     )
 
     user = relationship("User")
+
+    booking = relationship("Booking")

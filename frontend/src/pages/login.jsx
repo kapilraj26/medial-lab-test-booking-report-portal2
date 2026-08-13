@@ -31,21 +31,35 @@ function Login() {
 
       console.log("LOGIN RESPONSE:", response.data);
 
-      localStorage.setItem(
-        "access_token",
-        response.data.access_token
-      );
+      const token = response.data.access_token;
+      const userId = response.data.user_id;
 
-      if (response.data.user_id) {
-        localStorage.setItem(
-          "user_id",
-          response.data.user_id
-        );
+      if (!token) {
+        console.error("NO ACCESS TOKEN RECEIVED!");
+        alert("Login failed: access token not received.");
+        return;
       }
 
-      window.dispatchEvent(
-        new Event("storage")
+      // Save JWT token
+      localStorage.setItem("access_token", token);
+
+      // Save user ID
+      if (userId) {
+        localStorage.setItem("user_id", String(userId));
+      }
+
+      // Verify that token was actually saved
+      console.log(
+        "TOKEN SAVED:",
+        localStorage.getItem("access_token")
       );
+
+      console.log(
+        "USER ID SAVED:",
+        localStorage.getItem("user_id")
+      );
+
+      window.dispatchEvent(new Event("storage"));
 
       alert("Login successful!");
 
@@ -58,6 +72,10 @@ function Login() {
         console.log(
           "BACKEND RESPONSE:",
           error.response.data
+        );
+        console.log(
+          "STATUS:",
+          error.response.status
         );
       }
 

@@ -3,7 +3,7 @@ from app.models.report import Report
 
 
 def create_report(db: Session, report):
-    new_report = Report(
+    new_report=Report(
         booking_id=report.booking_id,
         report_file=report.report_file,
         result=report.result,

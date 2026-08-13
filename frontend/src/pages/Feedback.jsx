@@ -3,8 +3,7 @@ import axios from "axios";
 
 function Feedback() {
   const [formData, setFormData] = useState({
-    user_id: Number(localStorage.getItem("user_id")),
-    booking_id: 9,
+    booking_id: 10,
     rating: 5,
     comments: "",
   });
@@ -22,23 +21,31 @@ function Feedback() {
     try {
       const token = localStorage.getItem("access_token");
 
+      console.log("FEEDBACK TOKEN:", token);
+
+      if (!token) {
+        alert("Please login first!");
+        return;
+      }
+
       const response = await axios.post(
         "http://127.0.0.1:8000/feedback/",
         {
-          ...formData,
-          user_id: Number(formData.user_id),
           booking_id: Number(formData.booking_id),
           rating: Number(formData.rating),
+          comments: formData.comments,
         },
         {
           headers: {
-            Authorization: `Bearer ${token}`,
+            Authorization: "Bearer " + token,
+            "Content-Type": "application/json",
           },
         }
       );
 
+      console.log("FEEDBACK RESPONSE:", response.data);
+
       alert("Feedback submitted successfully!");
-      console.log(response.data);
 
       setFormData({
         ...formData,
@@ -46,14 +53,38 @@ function Feedback() {
       });
 
     } catch (error) {
-      console.error(error);
-      alert("Failed to submit feedback");
+      console.error("FEEDBACK ERROR:", error);
+
+      if (error.response) {
+        console.log(
+          "SERVER RESPONSE:",
+          error.response.data
+        );
+
+        console.log(
+          "STATUS:",
+          error.response.status
+        );
+
+        if (error.response.status === 401) {
+          alert("Session expired. Please login again.");
+
+          localStorage.removeItem("access_token");
+          localStorage.removeItem("user_id");
+        } else {
+          alert("Failed to submit feedback");
+        }
+      } else {
+        alert("Unable to connect to backend");
+      }
     }
   };
 
   return (
     <div className="container mt-5">
+
       <div className="row justify-content-center">
+
         <div className="col-md-6">
 
           <h2 className="text-center mb-4">
@@ -119,7 +150,9 @@ function Feedback() {
           </form>
 
         </div>
+
       </div>
+
     </div>
   );
 }

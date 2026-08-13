@@ -2,7 +2,7 @@ from pydantic import BaseModel
 
 
 class FeedbackCreate(BaseModel):
-    user_id: int
+    booking_id: int
     rating: int
     comments: str
 

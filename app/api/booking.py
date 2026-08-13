@@ -13,7 +13,7 @@ router = APIRouter(
 @router.post("/", response_model=BookingResponse)
 def add_booking(
     booking: BookingCreate,
-    db: Session = Depends(get_db),
+    db: Session=Depends(get_db),
     current_user=Depends(get_current_user)
 ):
     return create_booking(db, booking)
@@ -21,7 +21,7 @@ def add_booking(
 
 @router.get("/", response_model=list[BookingResponse])
 def view_bookings(
-    db: Session = Depends(get_db),
+    db: Session=Depends(get_db),
     current_user=Depends(get_current_user)
 ):
     return get_all_bookings(db)
