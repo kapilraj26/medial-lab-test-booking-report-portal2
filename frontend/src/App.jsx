@@ -17,6 +17,8 @@ import MyBookings from "./pages/MyBookings";
 import Reports from "./pages/Reports";
 import Feedback from "./pages/Feedback";
 import MyFeedback from "./pages/MyFeedback";
+import Profile from "./pages/Profile";
+
 
 
 function Home() {
@@ -181,6 +183,13 @@ function Navbar() {
                 My Feedback
               </Link>
 
+              <Link
+                to="/profile"
+                className="btn btn-light"
+              >
+                My Profile
+              </Link>
+
               <button
                 onClick={logout}
                 className="btn btn-danger"
@@ -278,7 +287,7 @@ function App() {
           }
         />
 
-        <Route
+        <Route  
           path="/myfeedback"
           element={
             <ProtectedRoute>
@@ -286,6 +295,17 @@ function App() {
             </ProtectedRoute>
           }
         />
+
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <Profile />
+            </ProtectedRoute>
+          }
+        />
+
+      
 
       </Routes>
 

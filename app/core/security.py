@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 
 from jose import jwt, JWTError
 from fastapi import HTTPException, status, Depends
-from fastapi.security import OAuth2PasswordBearer
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
 
 SECRET_KEY = "MedicalLabPortal@2026"
@@ -10,12 +10,11 @@ ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
 
-oauth2_scheme = OAuth2PasswordBearer(
-    tokenUrl="/users/login"
-)
+security = HTTPBearer()
 
 
 def create_access_token(data: dict):
+
     to_encode = data.copy()
 
     expire = datetime.utcnow() + timedelta(
@@ -34,8 +33,11 @@ def create_access_token(data: dict):
 
 
 def get_current_user_email(
-    token: str = Depends(oauth2_scheme)
+    credentials: HTTPAuthorizationCredentials = Depends(security)
 ):
+
+    token = credentials.credentials
+
     try:
 
         payload = jwt.decode(

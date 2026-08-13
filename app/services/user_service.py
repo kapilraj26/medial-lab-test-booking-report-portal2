@@ -26,6 +26,53 @@ def get_all_users(db: Session):
     return db.query(User).all()
 
 
+def update_user(db: Session, user_id: int, user_data):
+
+    user = db.query(User).filter(
+        User.user_id == user_id
+    ).first()
+
+    if user is None:
+        return None
+
+    user.full_name = user_data.full_name
+    user.phone = user_data.phone
+
+    db.commit()
+    db.refresh(user)
+
+    return user
+
+def change_password(
+    db: Session,
+    user_id: int,
+    current_password: str,
+    new_password: str
+):
+
+    user = db.query(User).filter(
+        User.user_id == user_id
+    ).first()
+
+    if user is None:
+        return None, "User not found"
+
+    # Verify current password
+    if not verify_password(
+        current_password,
+        user.password
+    ):
+        return None, "Current password is incorrect"
+
+    # Hash new password
+    user.password = hash_password(new_password)
+
+    db.commit()
+    db.refresh(user)
+
+    return user, None
+
+
 def login_user(db: Session, login):
 
     print("LOGIN EMAIL:", login.email)
