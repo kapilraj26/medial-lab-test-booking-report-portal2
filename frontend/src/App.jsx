@@ -10,7 +10,7 @@ import {
 } from "react-router-dom";
 
 import LabTests from "./pages/LabTests";
-import Login from "./pages/Login";
+import Login from "./pages/login";
 import Register from "./pages/Register";
 import Booking from "./pages/Booking";
 import MyBookings from "./pages/MyBookings";
@@ -18,8 +18,15 @@ import Reports from "./pages/Reports";
 import Feedback from "./pages/Feedback";
 import MyFeedback from "./pages/MyFeedback";
 import Profile from "./pages/Profile";
+import ForgotPassword from "./pages/ForgotPassword";
+import StaffReports from "./pages/StaffReports";
+import StaffBookings from "./pages/StaffBookings";
+import AdminUsers from "./pages/AdminUsers";
 
 
+// ==========================================
+// HOME
+// ==========================================
 
 function Home() {
   return (
@@ -45,7 +52,11 @@ function Home() {
 }
 
 
-// Protected Route
+// ==========================================
+// PROTECTED ROUTE
+// LOGIN REQUIRED
+// ==========================================
+
 function ProtectedRoute({ children }) {
 
   const token = localStorage.getItem("access_token");
@@ -58,7 +69,46 @@ function ProtectedRoute({ children }) {
 }
 
 
-// Navbar
+// ==========================================
+// ROLE PROTECTED ROUTE
+// ==========================================
+// Used for Staff / Admin / Admin-only pages
+// ==========================================
+
+function RoleProtectedRoute({
+  children,
+  allowedRoles
+}) {
+
+  const token = localStorage.getItem("access_token");
+  const role = localStorage.getItem("role");
+
+  // ========================================
+  // NOT LOGGED IN
+  // ========================================
+
+  if (!token) {
+    return <Navigate to="/login" replace />;
+  }
+
+
+  // ========================================
+  // WRONG ROLE
+  // ========================================
+
+  if (!allowedRoles.includes(role)) {
+    return <Navigate to="/labtests" replace />;
+  }
+
+
+  return children;
+}
+
+
+// ==========================================
+// NAVBAR
+// ==========================================
+
 function Navbar() {
 
   const navigate = useNavigate();
@@ -67,6 +117,12 @@ function Navbar() {
     !!localStorage.getItem("access_token")
   );
 
+  const role = localStorage.getItem("role");
+
+
+  // ========================================
+  // CHECK LOGIN
+  // ========================================
 
   useEffect(() => {
 
@@ -95,11 +151,17 @@ function Navbar() {
   }, []);
 
 
+  // ========================================
+  // LOGOUT
+  // ========================================
+
   const logout = () => {
 
     localStorage.removeItem("access_token");
 
     localStorage.removeItem("user_id");
+
+    localStorage.removeItem("role");
 
     setIsLoggedIn(false);
 
@@ -109,6 +171,10 @@ function Navbar() {
 
   };
 
+
+  // ========================================
+  // NAVBAR UI
+  // ========================================
 
   return (
 
@@ -126,9 +192,14 @@ function Navbar() {
 
         <div className="d-flex gap-2 flex-wrap">
 
+          {/* =================================
+              NOT LOGGED IN
+          ================================= */}
+
           {!isLoggedIn ? (
 
             <>
+
               <Link
                 to="/login"
                 className="btn btn-light"
@@ -142,11 +213,16 @@ function Navbar() {
               >
                 Register
               </Link>
+
             </>
 
           ) : (
 
             <>
+
+              {/* =================================
+                  COMMON FEATURE
+              ================================= */}
 
               <Link
                 to="/labtests"
@@ -155,33 +231,106 @@ function Navbar() {
                 Lab Tests
               </Link>
 
-              <Link
-                to="/mybookings"
-                className="btn btn-light"
-              >
-                My Bookings
-              </Link>
 
-              <Link
-                to="/reports"
-                className="btn btn-light"
-              >
-                Reports
-              </Link>
+              {/* =================================
+                  PATIENT FEATURES
+              ================================= */}
 
-              <Link
-                to="/feedback"
-                className="btn btn-light"
-              >
-                Feedback
-              </Link>
+              {role === "Patient" && (
 
-              <Link
-                to="/myfeedback"
-                className="btn btn-light"
-              >
-                My Feedback
-              </Link>
+                <>
+
+                  <Link
+                    to="/mybookings"
+                    className="btn btn-light"
+                  >
+                    My Bookings
+                  </Link>
+
+
+                  <Link
+                    to="/reports"
+                    className="btn btn-light"
+                  >
+                    Reports
+                  </Link>
+
+
+                  <Link
+                    to="/feedback"
+                    className="btn btn-light"
+                  >
+                    Feedback
+                  </Link>
+
+
+                  <Link
+                    to="/myfeedback"
+                    className="btn btn-light"
+                  >
+                    My Feedback
+                  </Link>
+
+                </>
+
+              )}
+
+
+              {/* =================================
+                  STAFF / ADMIN FEATURES
+              ================================= */}
+
+              {(role === "Staff" || role === "Admin") && (
+
+                <>
+
+                  <Link
+                    to="/staff-bookings"
+                    className="btn btn-info"
+                  >
+                    Booking Management
+                  </Link>
+
+
+                  <Link
+                    to="/staff-reports"
+                    className="btn btn-warning"
+                  >
+                    Upload Report
+                  </Link>
+
+
+                  <Link
+                    to="/reports"
+                    className="btn btn-light"
+                  >
+                    Reports
+                  </Link>
+
+                </>
+
+              )}
+
+
+              {/* =================================
+                  ADMIN ONLY
+              ================================= */}
+
+              {role === "Admin" && (
+
+                <Link
+                  to="/admin-users"
+                  className="btn btn-warning"
+                >
+                  User Management
+                </Link>
+
+              )}
+
+
+              {/* =================================
+                  PROFILE
+              ================================= */}
 
               <Link
                 to="/profile"
@@ -189,6 +338,11 @@ function Navbar() {
               >
                 My Profile
               </Link>
+
+
+              {/* =================================
+                  LOGOUT
+              ================================= */}
 
               <button
                 onClick={logout}
@@ -211,7 +365,10 @@ function Navbar() {
 }
 
 
-// App
+// ==========================================
+// APP
+// ==========================================
+
 function App() {
 
   return (
@@ -222,17 +379,21 @@ function App() {
 
       <Routes>
 
-        {/* Public routes */}
+        {/* ==================================
+            PUBLIC ROUTES
+        ================================== */}
 
         <Route
           path="/"
           element={<Home />}
         />
 
+
         <Route
           path="/login"
           element={<Login />}
         />
+
 
         <Route
           path="/register"
@@ -240,7 +401,15 @@ function App() {
         />
 
 
-        {/* Protected routes */}
+        <Route
+          path="/forgot-password"
+          element={<ForgotPassword />}
+        />
+
+
+        {/* ==================================
+            GENERAL PROTECTED ROUTES
+        ================================== */}
 
         <Route
           path="/labtests"
@@ -251,6 +420,7 @@ function App() {
           }
         />
 
+
         <Route
           path="/booking"
           element={
@@ -259,6 +429,7 @@ function App() {
             </ProtectedRoute>
           }
         />
+
 
         <Route
           path="/mybookings"
@@ -269,6 +440,7 @@ function App() {
           }
         />
 
+
         <Route
           path="/reports"
           element={
@@ -277,6 +449,7 @@ function App() {
             </ProtectedRoute>
           }
         />
+
 
         <Route
           path="/feedback"
@@ -287,7 +460,8 @@ function App() {
           }
         />
 
-        <Route  
+
+        <Route
           path="/myfeedback"
           element={
             <ProtectedRoute>
@@ -295,6 +469,7 @@ function App() {
             </ProtectedRoute>
           }
         />
+
 
         <Route
           path="/profile"
@@ -305,7 +480,64 @@ function App() {
           }
         />
 
-      
+
+        {/* ==================================
+            STAFF / ADMIN
+            BOOKING MANAGEMENT
+        ================================== */}
+
+        <Route
+          path="/staff-bookings"
+          element={
+            <RoleProtectedRoute
+              allowedRoles={[
+                "Staff",
+                "Admin"
+              ]}
+            >
+              <StaffBookings />
+            </RoleProtectedRoute>
+          }
+        />
+
+
+        {/* ==================================
+            STAFF / ADMIN
+            UPLOAD MEDICAL REPORT
+        ================================== */}
+
+        <Route
+          path="/staff-reports"
+          element={
+            <RoleProtectedRoute
+              allowedRoles={[
+                "Staff",
+                "Admin"
+              ]}
+            >
+              <StaffReports />
+            </RoleProtectedRoute>
+          }
+        />
+
+
+        {/* ==================================
+            ADMIN ONLY
+            USER MANAGEMENT
+        ================================== */}
+
+        <Route
+          path="/admin-users"
+          element={
+            <RoleProtectedRoute
+              allowedRoles={[
+                "Admin"
+              ]}
+            >
+              <AdminUsers />
+            </RoleProtectedRoute>
+          }
+        />
 
       </Routes>
 
@@ -313,5 +545,6 @@ function App() {
 
   );
 }
+
 
 export default App;

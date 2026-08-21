@@ -3,7 +3,6 @@ from pydantic import BaseModel
 
 
 class BookingCreate(BaseModel):
-    user_id: int
     test_id: int
     booking_date: date
     booking_time: time

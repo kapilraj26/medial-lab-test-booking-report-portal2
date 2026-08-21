@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import api from "../api/axios";
 
 function LabTests() {
   const [tests, setTests] = useState([]);
@@ -12,14 +12,43 @@ function LabTests() {
 
   const getTests = async () => {
     try {
-      const response = await axios.get(
-        "http://127.0.0.1:8000/labtests/"
+      const response = await api.get(
+        "/labtests/"
+      );
+
+      console.log(
+        "LAB TESTS RESPONSE:",
+        response.data
       );
 
       setTests(response.data);
+
     } catch (error) {
-      console.error(error);
-      alert("Failed to load lab tests");
+      console.error(
+        "LAB TESTS ERROR:",
+        error
+      );
+
+      if (error.response?.status === 401) {
+        alert(
+          "Session expired. Please login again!"
+        );
+
+        localStorage.removeItem(
+          "access_token"
+        );
+
+        localStorage.removeItem(
+          "user_id"
+        );
+
+        navigate("/login");
+
+      } else {
+        alert(
+          "Failed to load lab tests"
+        );
+      }
     }
   };
 
@@ -31,11 +60,14 @@ function LabTests() {
       </h2>
 
       <div className="row">
+
         {tests.map((test) => (
+
           <div
             className="col-md-4 mb-4"
             key={test.test_id}
           >
+
             <div className="card shadow h-100">
 
               <div className="card-body">
@@ -51,9 +83,14 @@ function LabTests() {
                 <button
                   className="btn btn-primary"
                   onClick={() =>
-                    navigate("/booking", {
-                      state: { test: test }
-                    })
+                    navigate(
+                      "/booking",
+                      {
+                        state: {
+                          test: test
+                        }
+                      }
+                    )
                   }
                 >
                   Book Test
@@ -62,8 +99,11 @@ function LabTests() {
               </div>
 
             </div>
+
           </div>
+
         ))}
+
       </div>
 
     </div>

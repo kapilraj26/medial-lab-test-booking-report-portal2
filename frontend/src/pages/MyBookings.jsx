@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
+import { useNavigate } from "react-router-dom";
+import api from "../api/axios";
 
 function MyBookings() {
   const [bookings, setBookings] = useState([]);
+  const navigate = useNavigate();
 
   useEffect(() => {
     getBookings();
@@ -10,43 +12,80 @@ function MyBookings() {
 
   const getBookings = async () => {
     try {
-      const token = localStorage.getItem("access_token");
-
-      const response = await axios.get(
-        "http://127.0.0.1:8000/bookings/",
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+      const response = await api.get(
+        "/bookings/"
       );
 
-      const userId = Number(localStorage.getItem("user_id"));
+      console.log(
+        "MY BOOKINGS RESPONSE:",
+        response.data
+      );
 
-      const myBookings = response.data.filter(
-        (booking) => booking.user_id === userId);
+      // Backend already returns only
+      // the authenticated user's bookings
+      setBookings(response.data);
 
-      setBookings(myBookings);
     } catch (error) {
-      console.error(error);
-      alert("Failed to load bookings");
+      console.error(
+        "MY BOOKINGS ERROR:",
+        error
+      );
+
+      if (error.response?.status === 401) {
+        alert(
+          "Session expired. Please login again!"
+        );
+
+        localStorage.removeItem(
+          "access_token"
+        );
+
+        localStorage.removeItem(
+          "user_id"
+        );
+
+        navigate("/login");
+
+      } else if (error.response) {
+        console.log(
+          "SERVER RESPONSE:",
+          error.response.data
+        );
+
+        alert(
+          error.response.data.detail ||
+          "Failed to load bookings"
+        );
+
+      } else {
+        alert(
+          "Unable to connect to backend"
+        );
+      }
     }
   };
 
   return (
     <div className="container mt-5">
+
       <h2 className="text-center mb-4">
         My Bookings
       </h2>
 
       {bookings.length === 0 ? (
+
         <p className="text-center">
           No bookings found.
         </p>
+
       ) : (
+
         <div className="table-responsive">
+
           <table className="table table-bordered table-striped">
+
             <thead className="table-primary">
+
               <tr>
                 <th>Booking ID</th>
                 <th>User ID</th>
@@ -55,23 +94,53 @@ function MyBookings() {
                 <th>Time</th>
                 <th>Status</th>
               </tr>
+
             </thead>
 
             <tbody>
+
               {bookings.map((booking) => (
-                <tr key={booking.booking_id}>
-                  <td>{booking.booking_id}</td>
-                  <td>{booking.user_id}</td>
-                  <td>{booking.test_id}</td>
-                  <td>{booking.booking_date}</td>
-                  <td>{booking.booking_time}</td>
-                  <td>{booking.status}</td>
+
+                <tr
+                  key={booking.booking_id}
+                >
+
+                  <td>
+                    {booking.booking_id}
+                  </td>
+
+                  <td>
+                    {booking.user_id}
+                  </td>
+
+                  <td>
+                    {booking.test_id}
+                  </td>
+
+                  <td>
+                    {booking.booking_date}
+                  </td>
+
+                  <td>
+                    {booking.booking_time}
+                  </td>
+
+                  <td>
+                    {booking.status}
+                  </td>
+
                 </tr>
+
               ))}
+
             </tbody>
+
           </table>
+
         </div>
+
       )}
+
     </div>
   );
 }

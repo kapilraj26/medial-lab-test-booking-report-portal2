@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 
 function Login() {
@@ -33,6 +33,7 @@ function Login() {
 
       const token = response.data.access_token;
       const userId = response.data.user_id;
+      const role = response.data.role;
 
       if (!token) {
         console.error("NO ACCESS TOKEN RECEIVED!");
@@ -45,10 +46,18 @@ function Login() {
 
       // Save user ID
       if (userId) {
-        localStorage.setItem("user_id", String(userId));
+        localStorage.setItem(
+          "user_id",
+          String(userId)
+        );
       }
 
-      // Verify that token was actually saved
+      // Save user role
+      if (role) {
+        localStorage.setItem("role", role);
+      }
+
+      // Verify saved data
       console.log(
         "TOKEN SAVED:",
         localStorage.getItem("access_token")
@@ -59,7 +68,14 @@ function Login() {
         localStorage.getItem("user_id")
       );
 
-      window.dispatchEvent(new Event("storage"));
+      console.log(
+        "ROLE SAVED:",
+        localStorage.getItem("role")
+      );
+
+      window.dispatchEvent(
+        new Event("storage")
+      );
 
       alert("Login successful!");
 
@@ -73,6 +89,7 @@ function Login() {
           "BACKEND RESPONSE:",
           error.response.data
         );
+
         console.log(
           "STATUS:",
           error.response.status
@@ -99,6 +116,8 @@ function Login() {
             onSubmit={handleSubmit}
           >
 
+            {/* EMAIL */}
+
             <label className="mb-2">
               Email
             </label>
@@ -113,6 +132,8 @@ function Login() {
               required
             />
 
+            {/* PASSWORD */}
+
             <label className="mb-2">
               Password
             </label>
@@ -120,12 +141,22 @@ function Login() {
             <input
               type="password"
               name="password"
-              className="form-control mb-3"
+              className="form-control mb-2"
               placeholder="Enter your password"
               value={formData.password}
               onChange={handleChange}
               required
             />
+
+            {/* FORGOT PASSWORD */}
+
+            <div className="text-end mb-3">
+              <Link to="/forgot-password">
+                Forgot Password?
+              </Link>
+            </div>
+
+            {/* LOGIN BUTTON */}
 
             <button
               type="submit"

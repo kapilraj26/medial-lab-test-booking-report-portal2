@@ -21,31 +21,71 @@ router = APIRouter(
 )
 
 
-@router.post("/", response_model=FeedbackResponse)
+@router.post(
+    "/",
+    response_model=FeedbackResponse
+)
 def add_feedback(
     feedback: FeedbackCreate,
     db: Session = Depends(get_db),
-    current_user_email: str = Depends(get_current_user_email)
+    current_user_email: str = Depends(
+        get_current_user_email
+    )
 ):
 
-    result = create_feedback(
+    result, error = create_feedback(
         db,
         feedback,
         current_user_email
     )
 
-    if result is None:
+    if error == "User not found":
         raise HTTPException(
             status_code=404,
-            detail="User not found"
+            detail=error
+        )
+
+    if error == "Booking not found":
+        raise HTTPException(
+            status_code=404,
+            detail=error
+        )
+
+    if error == "Feedback already submitted for this booking":
+        raise HTTPException(
+            status_code=400,
+            detail=error
+        )
+
+    if error:
+        raise HTTPException(
+            status_code=403,
+            detail=error
         )
 
     return result
 
 
-@router.get("/", response_model=list[FeedbackResponse])
+@router.get(
+    "/",
+    response_model=list[FeedbackResponse]
+)
 def view_feedback(
     db: Session = Depends(get_db),
-    current_user_email: str = Depends(get_current_user_email)
+    current_user_email: str = Depends(
+        get_current_user_email
+    )
 ):
-    return get_feedbacks(db)
+
+    feedbacks = get_feedbacks(
+        db,
+        current_user_email
+    )
+
+    if feedbacks is None:
+        raise HTTPException(
+            status_code=404,
+            detail="User not found"
+        )
+
+    return feedbacks

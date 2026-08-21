@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
+import api from "../api/axios";
 
 function Profile() {
   const [profile, setProfile] = useState(null);
@@ -23,25 +23,18 @@ function Profile() {
     getProfile();
   }, []);
 
+  // =========================
+  // GET PROFILE
+  // =========================
+
   const getProfile = async () => {
     try {
-      const token = localStorage.getItem("access_token");
+      const response = await api.get("/users/me");
 
-      if (!token) {
-        alert("Please login first!");
-        return;
-      }
-
-      const response = await axios.get(
-        "http://127.0.0.1:8000/users/me",
-        {
-          headers: {
-            Authorization: "Bearer " + token,
-          },
-        }
+      console.log(
+        "PROFILE RESPONSE:",
+        response.data
       );
-
-      console.log("PROFILE RESPONSE:", response.data);
 
       setProfile(response.data);
 
@@ -51,13 +44,24 @@ function Profile() {
       });
 
     } catch (error) {
-      console.error("PROFILE ERROR:", error);
+      console.error(
+        "PROFILE ERROR:",
+        error
+      );
 
       if (error.response?.status === 401) {
-        alert("Session expired. Please login again!");
+        alert(
+          "Session expired. Please login again!"
+        );
 
-        localStorage.removeItem("access_token");
-        localStorage.removeItem("user_id");
+        localStorage.removeItem(
+          "access_token"
+        );
+
+        localStorage.removeItem(
+          "user_id"
+        );
+
       } else {
         alert("Failed to load profile");
       }
@@ -68,7 +72,10 @@ function Profile() {
   };
 
 
-  // EDIT PROFILE
+  // =========================
+  // EDIT PROFILE INPUT
+  // =========================
+
   const handleChange = (e) => {
     setFormData({
       ...formData,
@@ -77,32 +84,26 @@ function Profile() {
   };
 
 
+  // =========================
+  // UPDATE PROFILE
+  // =========================
+
   const handleUpdate = async (e) => {
     e.preventDefault();
 
     try {
-      const token = localStorage.getItem("access_token");
-
-      if (!token) {
-        alert("Please login first!");
-        return;
-      }
-
-      const response = await axios.put(
-        "http://127.0.0.1:8000/users/me",
+      const response = await api.put(
+        "/users/me",
         {
           full_name: formData.full_name,
           phone: formData.phone,
-        },
-        {
-          headers: {
-            Authorization: "Bearer " + token,
-            "Content-Type": "application/json",
-          },
         }
       );
 
-      console.log("UPDATE PROFILE RESPONSE:", response.data);
+      console.log(
+        "UPDATE PROFILE RESPONSE:",
+        response.data
+      );
 
       setProfile(response.data);
 
@@ -113,25 +114,42 @@ function Profile() {
 
       setEditing(false);
 
-      alert("Profile updated successfully!");
+      alert(
+        "Profile updated successfully!"
+      );
 
     } catch (error) {
-      console.error("UPDATE PROFILE ERROR:", error);
+      console.error(
+        "UPDATE PROFILE ERROR:",
+        error
+      );
 
       if (error.response?.status === 401) {
-        alert("Session expired. Please login again!");
+        alert(
+          "Session expired. Please login again!"
+        );
 
-        localStorage.removeItem("access_token");
-        localStorage.removeItem("user_id");
+        localStorage.removeItem(
+          "access_token"
+        );
+
+        localStorage.removeItem(
+          "user_id"
+        );
 
       } else {
-        alert("Failed to update profile");
+        alert(
+          "Failed to update profile"
+        );
       }
     }
   };
 
 
+  // =========================
   // PASSWORD INPUT
+  // =========================
+
   const handlePasswordInput = (e) => {
     setPasswordData({
       ...passwordData,
@@ -140,7 +158,10 @@ function Profile() {
   };
 
 
+  // =========================
   // CHANGE PASSWORD
+  // =========================
+
   const handlePasswordChange = async (e) => {
     e.preventDefault();
 
@@ -148,37 +169,32 @@ function Profile() {
       passwordData.new_password !==
       passwordData.confirm_password
     ) {
-      alert("New password and confirm password do not match!");
+      alert(
+        "New password and confirm password do not match!"
+      );
+
       return;
     }
 
-    if (passwordData.new_password.length < 6) {
-      alert("New password must be at least 6 characters!");
+    if (
+      passwordData.new_password.length < 8
+    ) {
+      alert(
+        "New password must be at least 8 characters!"
+      );
+
       return;
     }
 
     try {
-      const token = localStorage.getItem("access_token");
-
-      if (!token) {
-        alert("Please login first!");
-        return;
-      }
-
-      const response = await axios.put(
-        "http://127.0.0.1:8000/users/change-password",
+      const response = await api.put(
+        "/users/change-password",
         {
           current_password:
             passwordData.current_password,
 
           new_password:
             passwordData.new_password,
-        },
-        {
-          headers: {
-            Authorization: "Bearer " + token,
-            "Content-Type": "application/json",
-          },
         }
       );
 
@@ -187,7 +203,9 @@ function Profile() {
         response.data
       );
 
-      alert("Password changed successfully!");
+      alert(
+        "Password changed successfully!"
+      );
 
       setPasswordData({
         current_password: "",
@@ -204,43 +222,70 @@ function Profile() {
       );
 
       if (error.response?.status === 401) {
-        alert("Session expired. Please login again!");
+        alert(
+          "Session expired. Please login again!"
+        );
 
-        localStorage.removeItem("access_token");
-        localStorage.removeItem("user_id");
+        localStorage.removeItem(
+          "access_token"
+        );
 
-      } else if (error.response?.status === 400) {
+        localStorage.removeItem(
+          "user_id"
+        );
+
+      } else if (
+        error.response?.status === 400
+      ) {
         alert(
           error.response.data.detail ||
           "Current password is incorrect"
         );
 
       } else {
-        alert("Failed to change password");
+        alert(
+          "Failed to change password"
+        );
       }
     }
   };
 
 
+  // =========================
+  // LOADING
+  // =========================
+
   if (loading) {
     return (
       <div className="container mt-5 text-center">
-        <h3>Loading profile...</h3>
+        <h3>
+          Loading profile...
+        </h3>
       </div>
     );
   }
 
+
+  // =========================
+  // PROFILE NOT FOUND
+  // =========================
 
   if (!profile) {
     return (
       <div className="container mt-5">
+
         <div className="alert alert-warning text-center">
           Profile not available.
         </div>
+
       </div>
     );
   }
 
+
+  // =========================
+  // UI
+  // =========================
 
   return (
     <div className="container mt-5">
@@ -254,68 +299,96 @@ function Profile() {
           </h2>
 
 
-          {/* VIEW PROFILE */}
+          {/* =========================
+              VIEW PROFILE
+          ========================= */}
 
-          {!editing && !changingPassword && (
+          {!editing &&
+            !changingPassword && (
 
             <div className="card shadow p-4">
 
               <div className="mb-3">
-                <strong>User ID</strong>
+
+                <strong>
+                  User ID
+                </strong>
 
                 <p className="form-control">
                   {profile.user_id}
                 </p>
+
               </div>
 
 
               <div className="mb-3">
-                <strong>Full Name</strong>
+
+                <strong>
+                  Full Name
+                </strong>
 
                 <p className="form-control">
                   {profile.full_name}
                 </p>
+
               </div>
 
 
               <div className="mb-3">
-                <strong>Email</strong>
+
+                <strong>
+                  Email
+                </strong>
 
                 <p className="form-control">
                   {profile.email}
                 </p>
+
               </div>
 
 
               <div className="mb-3">
-                <strong>Phone</strong>
+
+                <strong>
+                  Phone
+                </strong>
 
                 <p className="form-control">
-                  {profile.phone || "Not provided"}
+                  {profile.phone ||
+                    "Not provided"}
                 </p>
+
               </div>
 
 
               <div className="mb-3">
-                <strong>Role</strong>
+
+                <strong>
+                  Role
+                </strong>
 
                 <p className="form-control">
                   {profile.role}
                 </p>
+
               </div>
 
 
               <div className="d-flex gap-2">
 
                 <button
+                  type="button"
                   className="btn btn-primary w-100"
-                  onClick={() => setEditing(true)}
+                  onClick={() =>
+                    setEditing(true)
+                  }
                 >
                   Edit Profile
                 </button>
 
 
                 <button
+                  type="button"
                   className="btn btn-warning w-100"
                   onClick={() =>
                     setChangingPassword(true)
@@ -331,7 +404,9 @@ function Profile() {
           )}
 
 
-          {/* EDIT PROFILE */}
+          {/* =========================
+              EDIT PROFILE
+          ========================= */}
 
           {editing && (
 
@@ -350,7 +425,9 @@ function Profile() {
                   type="text"
                   name="full_name"
                   className="form-control"
-                  value={formData.full_name}
+                  value={
+                    formData.full_name
+                  }
                   onChange={handleChange}
                   required
                 />
@@ -371,6 +448,10 @@ function Profile() {
                   disabled
                 />
 
+                <small className="text-muted">
+                  Email cannot be changed.
+                </small>
+
               </div>
 
 
@@ -384,7 +465,9 @@ function Profile() {
                   type="text"
                   name="phone"
                   className="form-control"
-                  value={formData.phone}
+                  value={
+                    formData.phone
+                  }
                   onChange={handleChange}
                   required
                 />
@@ -405,6 +488,10 @@ function Profile() {
                   disabled
                 />
 
+                <small className="text-muted">
+                  Role cannot be changed.
+                </small>
+
               </div>
 
 
@@ -421,7 +508,9 @@ function Profile() {
                 <button
                   type="button"
                   className="btn btn-secondary w-100"
-                  onClick={() => setEditing(false)}
+                  onClick={() =>
+                    setEditing(false)
+                  }
                 >
                   Cancel
                 </button>
@@ -433,13 +522,17 @@ function Profile() {
           )}
 
 
-          {/* CHANGE PASSWORD */}
+          {/* =========================
+              CHANGE PASSWORD
+          ========================= */}
 
           {changingPassword && (
 
             <form
               className="card shadow p-4"
-              onSubmit={handlePasswordChange}
+              onSubmit={
+                handlePasswordChange
+              }
             >
 
               <h4 className="text-center mb-4">
@@ -460,7 +553,9 @@ function Profile() {
                   value={
                     passwordData.current_password
                   }
-                  onChange={handlePasswordInput}
+                  onChange={
+                    handlePasswordInput
+                  }
                   required
                 />
 
@@ -480,9 +575,15 @@ function Profile() {
                   value={
                     passwordData.new_password
                   }
-                  onChange={handlePasswordInput}
+                  onChange={
+                    handlePasswordInput
+                  }
                   required
                 />
+
+                <small className="text-muted">
+                  Minimum 8 characters.
+                </small>
 
               </div>
 
@@ -500,7 +601,9 @@ function Profile() {
                   value={
                     passwordData.confirm_password
                   }
-                  onChange={handlePasswordInput}
+                  onChange={
+                    handlePasswordInput
+                  }
                   required
                 />
 
@@ -521,6 +624,7 @@ function Profile() {
                   type="button"
                   className="btn btn-secondary w-100"
                   onClick={() => {
+
                     setChangingPassword(false);
 
                     setPasswordData({
@@ -528,6 +632,7 @@ function Profile() {
                       new_password: "",
                       confirm_password: "",
                     });
+
                   }}
                 >
                   Cancel

@@ -1,19 +1,19 @@
 import { useState } from "react";
-import axios from "axios";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
+import api from "../api/axios";
 
 function Booking() {
   const location = useLocation();
+  const navigate = useNavigate();
 
   const selectedTest = location.state?.test;
 
- const [formData, setFormData] = useState({
-  user_id: Number(localStorage.getItem("user_id")),
-  test_id: selectedTest?.test_id || 1,
-  booking_date: "",
-  booking_time: "",
-  status: "Pending",
-});
+  const [formData, setFormData] = useState({
+    test_id: selectedTest?.test_id || 1,
+    booking_date: "",
+    booking_time: "",
+    status: "Pending",
+  });
 
   const handleChange = (e) => {
     setFormData({
@@ -26,29 +26,70 @@ function Booking() {
     e.preventDefault();
 
     try {
-      const token = localStorage.getItem("access_token");
-
-      const response = await axios.post(
-        "http://127.0.0.1:8000/bookings/",
-        formData,
+      const response = await api.post(
+        "/bookings/",
         {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          test_id: Number(formData.test_id),
+          booking_date: formData.booking_date,
+          booking_time: formData.booking_time,
+          status: formData.status,
         }
       );
 
+      console.log(
+        "BOOKING RESPONSE:",
+        response.data
+      );
+
       alert("Booking successful!");
-      console.log(response.data);
+
+      navigate("/mybookings");
+
     } catch (error) {
-      console.error(error);
-      alert("Booking failed!");
+      console.error(
+        "BOOKING ERROR:",
+        error
+      );
+
+      if (error.response?.status === 401) {
+        alert(
+          "Session expired. Please login again!"
+        );
+
+        localStorage.removeItem(
+          "access_token"
+        );
+
+        localStorage.removeItem(
+          "user_id"
+        );
+
+        navigate("/login");
+
+      } else if (error.response) {
+        console.log(
+          "BACKEND RESPONSE:",
+          error.response.data
+        );
+
+        alert(
+          error.response.data.detail ||
+          "Booking failed!"
+        );
+
+      } else {
+        alert(
+          "Unable to connect to backend"
+        );
+      }
     }
   };
 
   return (
     <div className="container mt-5">
+
       <div className="row justify-content-center">
+
         <div className="col-md-6">
 
           <h2 className="text-center mb-4">
@@ -108,7 +149,9 @@ function Booking() {
           </form>
 
         </div>
+
       </div>
+
     </div>
   );
 }

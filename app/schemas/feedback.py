@@ -1,9 +1,12 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class FeedbackCreate(BaseModel):
     booking_id: int
-    rating: int
+    rating: int = Field(
+        ge=1,
+        le=5
+    )
     comments: str
 
 

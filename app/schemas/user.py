@@ -6,8 +6,6 @@ class UserCreate(BaseModel):
     email: EmailStr
     password: str
     phone: str
-    role: str = "Patient"
-
 
 class UserLogin(BaseModel):
     email: EmailStr
@@ -33,3 +31,14 @@ class UserUpdate(BaseModel):
 class PasswordChange(BaseModel):
     current_password: str
     new_password: str
+
+class ForgotPassword(BaseModel):
+    email: EmailStr
+
+
+class ResetPassword(BaseModel):
+    reset_token: str
+    new_password: str
+
+class RoleUpdate(BaseModel):
+    role: str

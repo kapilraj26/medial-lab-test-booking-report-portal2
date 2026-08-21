@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-
+from app.core.dependencies import require_role
 from app.core.database import get_db
 from app.core.security import get_current_user_email
 from app.models.user import User
@@ -9,7 +9,10 @@ from app.schemas.user import (
     UserResponse,
     UserLogin,
     UserUpdate,
-    PasswordChange
+    PasswordChange,
+    ForgotPassword,
+    ResetPassword,
+    RoleUpdate
 )
 
 from app.services.user_service import (
@@ -17,7 +20,10 @@ from app.services.user_service import (
     get_all_users,
     login_user,
     update_user,
-    change_password
+    change_password,
+    forgot_password,
+    reset_password,
+    update_user_role
 )
 
 
@@ -32,12 +38,30 @@ def register_user(
     user: UserCreate,
     db: Session = Depends(get_db)
 ):
-    return create_user(db, user)
+    result = create_user(db, user)
+
+    if result is None:
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                "Password must contain at least 8 characters, "
+                "one uppercase letter, one lowercase letter, "
+                "one number, and one special character"
+            )
+        )
+
+    return result
 
 
-@router.get("/", response_model=list[UserResponse])
+@router.get(
+    "/",
+    response_model=list[UserResponse]
+)
 def view_users(
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user=Depends(
+        require_role("Admin")
+    )
 ):
     return get_all_users(db)
 
@@ -134,3 +158,85 @@ def change_my_password(
     return {
         "message": "Password changed successfully"
     }
+
+# DAY 15 - FORGOT PASSWORD
+@router.post("/forgot-password")
+def forgot_password_request(
+    data: ForgotPassword,
+    db: Session = Depends(get_db)
+):
+    reset_token = forgot_password(
+        db,
+        data.email
+    )
+
+    if reset_token is None:
+        raise HTTPException(
+            status_code=404,
+            detail="User not found"
+        )
+
+    return {
+        "message": "Reset token generated",
+        "reset_token": reset_token
+    }
+
+# DAY 15 - RESET PASSWORD
+@router.post("/reset-password")
+def reset_password_request(
+    data: ResetPassword,
+    db: Session = Depends(get_db)
+):
+    success, message = reset_password(
+        db,
+        data.reset_token,
+        data.new_password
+    )
+
+    if not success:
+        raise HTTPException(
+            status_code=400,
+            detail=message
+        )
+
+    return {
+        "message": message
+    }
+
+@router.put(
+    "/{user_id}/role",
+    response_model=UserResponse
+)
+def change_user_role(
+    user_id: int,
+    role_data: RoleUpdate,
+    db: Session = Depends(get_db),
+    current_user=Depends(
+        require_role("Admin")
+    )
+):
+    user, error = update_user_role(
+        db,
+        user_id,
+        role_data.role
+    )
+
+    if error:
+        if error == "User not found":
+            raise HTTPException(
+                status_code=404,
+                detail=error
+            )
+
+        raise HTTPException(
+            status_code=400,
+            detail=error
+        )
+
+    return user
+@router.post("/", response_model=UserResponse)
+def register_user(
+    user: UserCreate,
+    db: Session = Depends(get_db)
+):
+    result = create_user(db, user)
