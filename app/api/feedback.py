@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.core.security import get_current_user_email
+from app.core.dependencies import require_roles
 
 from app.schemas.feedback import (
     FeedbackCreate,
@@ -11,7 +12,8 @@ from app.schemas.feedback import (
 
 from app.services.feedback_service import (
     create_feedback,
-    get_feedbacks
+    get_feedbacks,
+    get_all_feedbacks
 )
 
 
@@ -20,6 +22,10 @@ router = APIRouter(
     tags=["Feedback"]
 )
 
+
+# ==========================================
+# PATIENT - SUBMIT FEEDBACK
+# ==========================================
 
 @router.post(
     "/",
@@ -66,6 +72,10 @@ def add_feedback(
     return result
 
 
+# ==========================================
+# PATIENT - VIEW OWN FEEDBACK
+# ==========================================
+
 @router.get(
     "/",
     response_model=list[FeedbackResponse]
@@ -89,3 +99,21 @@ def view_feedback(
         )
 
     return feedbacks
+
+
+# ==========================================
+# STAFF / ADMIN - VIEW ALL FEEDBACK
+# ==========================================
+
+@router.get(
+    "/all",
+    response_model=list[FeedbackResponse]
+)
+def view_all_feedback(
+    db: Session = Depends(get_db),
+    current_user=Depends(
+        require_roles("Staff", "Admin")
+    )
+):
+
+    return get_all_feedbacks(db)

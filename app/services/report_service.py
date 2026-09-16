@@ -14,7 +14,10 @@ def create_report(
     report
 ):
 
-    # Find booking
+    # ==========================================
+    # FIND BOOKING
+    # ==========================================
+
     booking = db.query(Booking).filter(
         Booking.booking_id == report.booking_id
     ).first()
@@ -22,12 +25,43 @@ def create_report(
     if booking is None:
         return None, "Booking not found"
 
-    # Create report
+
+    # ==========================================
+    # REPORT ONLY AFTER BOOKING IS COMPLETED
+    # ==========================================
+
+    if booking.status != "Completed":
+        return (
+            None,
+            "Report can only be uploaded for a completed booking"
+        )
+
+
+    # ==========================================
+    # CHECK DUPLICATE REPORT
+    # ==========================================
+
+    existing_report = db.query(Report).filter(
+        Report.booking_id == report.booking_id
+    ).first()
+
+    if existing_report is not None:
+        return (
+            None,
+            "Report already exists for this booking"
+        )
+
+
+    # ==========================================
+    # CREATE REPORT
+    # ==========================================
+
     new_report = Report(
         booking_id=report.booking_id,
         report_file=report.report_file,
         result=report.result,
-        report_date=report.report_date
+        report_date=report.report_date,
+        status="Uploaded"
     )
 
     db.add(new_report)
@@ -46,7 +80,10 @@ def get_reports(
     user_email: str
 ):
 
-    # Find logged-in user
+    # ==========================================
+    # FIND LOGGED-IN USER
+    # ==========================================
+
     user = db.query(User).filter(
         User.email == user_email
     ).first()
@@ -54,7 +91,11 @@ def get_reports(
     if user is None:
         return None
 
-    # Find user's bookings
+
+    # ==========================================
+    # FIND USER'S BOOKINGS
+    # ==========================================
+
     user_bookings = db.query(Booking).filter(
         Booking.user_id == user.user_id
     ).all()
@@ -64,10 +105,30 @@ def get_reports(
         for booking in user_bookings
     ]
 
-    # Find reports belonging to those bookings
+
+    # ==========================================
+    # NO BOOKINGS
+    # ==========================================
+
     if not booking_ids:
         return []
+
+
+    # ==========================================
+    # GET USER'S REPORTS ONLY
+    # ==========================================
 
     return db.query(Report).filter(
         Report.booking_id.in_(booking_ids)
     ).all()
+
+
+# ==========================================
+# STAFF / ADMIN - GET ALL REPORTS
+# ==========================================
+
+def get_all_reports(
+    db: Session
+):
+
+    return db.query(Report).all()

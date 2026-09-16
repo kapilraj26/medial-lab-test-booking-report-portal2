@@ -11,6 +11,7 @@ class ReportCreate(BaseModel):
 
 class ReportResponse(ReportCreate):
     report_id: int
+    status: str
 
     model_config = {
         "from_attributes": True

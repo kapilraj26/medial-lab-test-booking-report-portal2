@@ -3,15 +3,39 @@ from datetime import datetime, timedelta
 from jose import jwt, JWTError
 from fastapi import HTTPException, status, Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from dotenv import load_dotenv
+
+import os
 
 
-SECRET_KEY = "MedicalLabPortal@2026"
+# ==========================================
+# LOAD ENVIRONMENT VARIABLES
+# ==========================================
+
+load_dotenv()
+
+
+# ==========================================
+# JWT CONFIGURATION
+# ==========================================
+
+SECRET_KEY = os.getenv("SECRET_KEY")
+
 ALGORITHM = "HS256"
+
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
 
+# ==========================================
+# SECURITY
+# ==========================================
+
 security = HTTPBearer()
 
+
+# ==========================================
+# CREATE ACCESS TOKEN
+# ==========================================
 
 def create_access_token(data: dict):
 
@@ -32,8 +56,14 @@ def create_access_token(data: dict):
     )
 
 
+# ==========================================
+# GET CURRENT USER EMAIL
+# ==========================================
+
 def get_current_user_email(
-    credentials: HTTPAuthorizationCredentials = Depends(security)
+    credentials: HTTPAuthorizationCredentials = Depends(
+        security
+    )
 ):
 
     token = credentials.credentials
@@ -49,6 +79,7 @@ def get_current_user_email(
         email = payload.get("sub")
 
         if email is None:
+
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid token"

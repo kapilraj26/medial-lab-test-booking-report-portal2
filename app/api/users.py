@@ -1,9 +1,12 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
+
 from app.core.dependencies import require_role
 from app.core.database import get_db
 from app.core.security import get_current_user_email
+
 from app.models.user import User
+
 from app.schemas.user import (
     UserCreate,
     UserResponse,
@@ -33,14 +36,26 @@ router = APIRouter(
 )
 
 
-@router.post("/", response_model=UserResponse)
+# ==========================================
+# REGISTER USER
+# ==========================================
+
+@router.post(
+    "/",
+    response_model=UserResponse
+)
 def register_user(
     user: UserCreate,
     db: Session = Depends(get_db)
 ):
-    result = create_user(db, user)
+
+    result = create_user(
+        db,
+        user
+    )
 
     if result is None:
+
         raise HTTPException(
             status_code=400,
             detail=(
@@ -53,6 +68,10 @@ def register_user(
     return result
 
 
+# ==========================================
+# ADMIN - VIEW ALL USERS
+# ==========================================
+
 @router.get(
     "/",
     response_model=list[UserResponse]
@@ -63,17 +82,29 @@ def view_users(
         require_role("Admin")
     )
 ):
+
     return get_all_users(db)
 
 
-@router.post("/login")
+# ==========================================
+# LOGIN
+# ==========================================
+
+@router.post(
+    "/login"
+)
 def login(
     login: UserLogin,
     db: Session = Depends(get_db)
 ):
-    result = login_user(db, login)
+
+    result = login_user(
+        db,
+        login
+    )
 
     if result is None:
+
         raise HTTPException(
             status_code=401,
             detail="Invalid email or password"
@@ -82,17 +113,27 @@ def login(
     return result
 
 
-# DAY 12 - MY PROFILE
-@router.get("/me", response_model=UserResponse)
+# ==========================================
+# MY PROFILE
+# ==========================================
+
+@router.get(
+    "/me",
+    response_model=UserResponse
+)
 def get_my_profile(
-    current_user_email: str = Depends(get_current_user_email),
+    current_user_email: str = Depends(
+        get_current_user_email
+    ),
     db: Session = Depends(get_db)
 ):
+
     user = db.query(User).filter(
         User.email == current_user_email
     ).first()
 
     if user is None:
+
         raise HTTPException(
             status_code=404,
             detail="User not found"
@@ -100,18 +141,29 @@ def get_my_profile(
 
     return user
 
-# DAY 13 - UPDATE MY PROFILE
-@router.put("/me", response_model=UserResponse)
+
+# ==========================================
+# UPDATE MY PROFILE
+# ==========================================
+
+@router.put(
+    "/me",
+    response_model=UserResponse
+)
 def update_my_profile(
     user_data: UserUpdate,
-    current_user_email: str = Depends(get_current_user_email),
+    current_user_email: str = Depends(
+        get_current_user_email
+    ),
     db: Session = Depends(get_db)
 ):
+
     user = db.query(User).filter(
         User.email == current_user_email
     ).first()
 
     if user is None:
+
         raise HTTPException(
             status_code=404,
             detail="User not found"
@@ -125,18 +177,28 @@ def update_my_profile(
 
     return updated_user
 
-# DAY 14 - CHANGE PASSWORD
-@router.put("/change-password")
+
+# ==========================================
+# CHANGE PASSWORD
+# ==========================================
+
+@router.put(
+    "/change-password"
+)
 def change_my_password(
     password_data: PasswordChange,
-    current_user_email: str = Depends(get_current_user_email),
+    current_user_email: str = Depends(
+        get_current_user_email
+    ),
     db: Session = Depends(get_db)
 ):
+
     user = db.query(User).filter(
         User.email == current_user_email
     ).first()
 
     if user is None:
+
         raise HTTPException(
             status_code=404,
             detail="User not found"
@@ -150,6 +212,7 @@ def change_my_password(
     )
 
     if error:
+
         raise HTTPException(
             status_code=400,
             detail=error
@@ -159,18 +222,26 @@ def change_my_password(
         "message": "Password changed successfully"
     }
 
-# DAY 15 - FORGOT PASSWORD
-@router.post("/forgot-password")
+
+# ==========================================
+# FORGOT PASSWORD
+# ==========================================
+
+@router.post(
+    "/forgot-password"
+)
 def forgot_password_request(
     data: ForgotPassword,
     db: Session = Depends(get_db)
 ):
+
     reset_token = forgot_password(
         db,
         data.email
     )
 
     if reset_token is None:
+
         raise HTTPException(
             status_code=404,
             detail="User not found"
@@ -181,12 +252,19 @@ def forgot_password_request(
         "reset_token": reset_token
     }
 
-# DAY 15 - RESET PASSWORD
-@router.post("/reset-password")
+
+# ==========================================
+# RESET PASSWORD
+# ==========================================
+
+@router.post(
+    "/reset-password"
+)
 def reset_password_request(
     data: ResetPassword,
     db: Session = Depends(get_db)
 ):
+
     success, message = reset_password(
         db,
         data.reset_token,
@@ -194,6 +272,7 @@ def reset_password_request(
     )
 
     if not success:
+
         raise HTTPException(
             status_code=400,
             detail=message
@@ -202,6 +281,11 @@ def reset_password_request(
     return {
         "message": message
     }
+
+
+# ==========================================
+# ADMIN - CHANGE USER ROLE
+# ==========================================
 
 @router.put(
     "/{user_id}/role",
@@ -215,6 +299,7 @@ def change_user_role(
         require_role("Admin")
     )
 ):
+
     user, error = update_user_role(
         db,
         user_id,
@@ -222,7 +307,9 @@ def change_user_role(
     )
 
     if error:
+
         if error == "User not found":
+
             raise HTTPException(
                 status_code=404,
                 detail=error
@@ -234,9 +321,3 @@ def change_user_role(
         )
 
     return user
-@router.post("/", response_model=UserResponse)
-def register_user(
-    user: UserCreate,
-    db: Session = Depends(get_db)
-):
-    result = create_user(db, user)

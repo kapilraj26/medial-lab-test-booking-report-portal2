@@ -83,6 +83,10 @@ def create_feedback(
     return new_feedback, None
 
 
+# ==========================================
+# PATIENT - GET OWN FEEDBACK
+# ==========================================
+
 def get_feedbacks(
     db: Session,
     user_email: str
@@ -108,4 +112,17 @@ def get_feedbacks(
         Feedback
     ).filter(
         Feedback.user_id == user.user_id
+    ).all()
+
+
+# ==========================================
+# STAFF / ADMIN - GET ALL FEEDBACK
+# ==========================================
+
+def get_all_feedbacks(
+    db: Session
+):
+
+    return db.query(
+        Feedback
     ).all()
