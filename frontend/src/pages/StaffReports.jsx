@@ -240,7 +240,7 @@ function StaffReports() {
       // ========================================
 
       const response = await axios.post(
-        "http://127.0.0.1:8000/reports/",
+        `${import.meta.env.VITE_API_URL || "http://127.0.0.1:8000"}/reports/`,
         data,
         {
           headers: {

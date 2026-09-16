@@ -22,7 +22,7 @@ function Login() {
 
     try {
       const response = await axios.post(
-        "http://127.0.0.1:8000/users/login",
+        `${import.meta.env.VITE_API_URL || "http://127.0.0.1:8000"}/users/login`,
         {
           email: formData.email.trim(),
           password: formData.password,
