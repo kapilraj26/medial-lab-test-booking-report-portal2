@@ -218,3 +218,10 @@ __marimo__/
 .streamlit/secrets.toml
 
 
+# Database backups
+*.sql
+requirements_backup.txt
+
+# Uploaded files
+uploads/
+
