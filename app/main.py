@@ -56,7 +56,8 @@ app.add_middleware(
 
     allow_origins=[
         "http://localhost:5173",
-        "http://127.0.0.1:5173"
+        "http://127.0.0.1:5173",
+        "https://medical-lab-frontend-1ztq.onrender.com"
     ],
 
     allow_credentials=True,
@@ -76,15 +77,10 @@ app.add_middleware(
 # ==========================================
 
 app.include_router(user_router)
-
 app.include_router(labtest_router)
-
 app.include_router(booking_router)
-
 app.include_router(report_router)
-
 app.include_router(feedback_router)
-
 app.include_router(admin_router)
 
 
@@ -94,7 +90,6 @@ app.include_router(admin_router)
 
 @app.get("/")
 def home():
-
     return {
         "success": True,
         "message": (
